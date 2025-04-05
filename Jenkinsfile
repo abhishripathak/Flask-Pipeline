@@ -1,5 +1,9 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'python:3.10'  // or any tag you prefer
+        }
+    }
 
     stages {
         stage('Checkout Code') {
@@ -16,7 +20,7 @@ pipeline {
 
         stage('Run Flask App') {
             steps {
-                sh 'nohup python app.py &'
+                sh 'nohup python app.py > flask.log 2>&1 &'
             }
         }
     }
