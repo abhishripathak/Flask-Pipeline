@@ -12,7 +12,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 echo '📥 Checking out code from GitHub'
-                git 'https://github.com/abhishripathak/Flask-Pipeline.git'  // Update if using a different repo
+                git branch: 'main', url: 'https://github.com/abhishripathak/Flask-Pipeline.git'
+  // Update if using a different repo
             }
         }
 
