@@ -1,42 +1,68 @@
 pipeline {
-    agent {
-        docker {
-            image 'python:3.10'
-        }
+    agent any
+
+    environment {
+        APP_NAME = "flask-app"
+        IMAGE_NAME = "flask-app-image"
+        CONTAINER_NAME = "flask-container"
+        PORT = "5000"
     }
 
     stages {
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
-                git 'https://github.com/abhishripathak/Flask-Pipeline.git'
+                echo '📥 Checking out code from GitHub'
+                git 'https://github.com/abhishripathak/Flask-Pipeline.git'  // Update if using a different repo
             }
         }
 
         stage('Install Dependencies') {
             steps {
+                echo '📦 Installing Python dependencies'
                 sh 'pip install -r requirements.txt'
             }
         }
 
-        stage('Run Flask App (test only)') {
+        stage('Run Tests') {
             steps {
-                sh 'python app.py & sleep 5'
-                sh 'curl http://localhost:5000'
+                echo '🧪 Running tests (if any)'
+                // Replace with pytest/unittest if you have tests
+                sh 'echo "No tests defined yet!"'
             }
         }
 
-        stage('Docker Build & Tag') {
+        stage('Docker Build') {
             steps {
-                sh 'docker build -t flask-app .'
+                echo '🐳 Building Docker image'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Docker Run Test') {
+        stage('Docker Run') {
             steps {
-                sh 'docker run -d -p 5000:5000 --name flask_container flask-app'
-                sh 'sleep 5 && curl http://localhost:5000'
-                sh 'docker stop flask_container && docker rm flask_container'
+                echo '🚀 Running Docker container'
+                sh '''
+                    docker run -d -p $PORT:$PORT --name $CONTAINER_NAME $IMAGE_NAME
+                    sleep 5
+                    curl http://localhost:$PORT
+                '''
             }
+        }
+    }
+
+    post {
+        always {
+            echo '🧹 Cleaning up...'
+            sh 'docker stop $CONTAINER_NAME || true'
+            sh 'docker rm $CONTAINER_NAME || true'
+        }
+
+        success {
+            echo '✅ Pipeline completed successfully!'
+        }
+
+        failure {
+            echo '❌ Pipeline failed.'
         }
     }
 }
