@@ -1,14 +1,14 @@
 pipeline {
     agent {
         docker {
-            image 'python:3.10'  // or any tag you prefer
+            image 'python:3.10'
         }
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Clone Repo') {
             steps {
-                git branch: 'main', url: 'https://github.com/abhishripathak/Flask-Pipeline.git'
+                git 'https://github.com/abhishripathak/Flask-Pipeline.git'
             }
         }
 
@@ -18,9 +18,24 @@ pipeline {
             }
         }
 
-        stage('Run Flask App') {
+        stage('Run Flask App (test only)') {
             steps {
-                sh 'nohup python app.py > flask.log 2>&1 &'
+                sh 'python app.py & sleep 5'
+                sh 'curl http://localhost:5000'
+            }
+        }
+
+        stage('Docker Build & Tag') {
+            steps {
+                sh 'docker build -t flask-app .'
+            }
+        }
+
+        stage('Docker Run Test') {
+            steps {
+                sh 'docker run -d -p 5000:5000 --name flask_container flask-app'
+                sh 'sleep 5 && curl http://localhost:5000'
+                sh 'docker stop flask_container && docker rm flask_container'
             }
         }
     }
